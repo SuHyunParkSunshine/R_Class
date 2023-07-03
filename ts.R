@@ -4,6 +4,15 @@
 
 ## 0. 패키지 불러오기
 library(tidyverse)
+library(lubridate)
+library(scales)
+library(patchwork)
+library(corrr)
+library(rstatix)
+library(prophet)
+library(astsa)
+library(forecast)
+
 
 ## 1. 데이터 프레임 작성
 # 파일 목록을 다 들고 와야 됨
@@ -39,6 +48,46 @@ stocks %>%
   labs(x = "", y = "Open", color = "", title = "주요 회사의 시작가격") +
   theme(legend.position = "none")
 
+(stocks %>%
+    filter(company %in% end_labels$company[1:3]) %>%
+    ggplot(aes(date, open)) +
+    geom_line(aes(color = company)) +
+    facet_wrap(~company) +
+    theme_bw() +
+    theme(legend.position = "none") +
+    labs(title = "Top 3", x = "")) /
+  (stocks %>%
+     filter(company %in% end_labels$company[-(1:3)]) %>%
+     ggplot(aes(date, open)) +
+     geom_line(aes(color = company)) +
+     facet_wrap(~company) +
+     theme_bw() +
+     theme(legend.position = "none") +
+     labs(title = "Bottom 3", x = ""))
+
+#시계열
+aapl <- stocks %>% 
+  filter(name == "AAPL") %>% 
+  select(ds = date, y = open) #x가 고정이다!! 종가 대신 시작가를 정한 것! 여러개해도 괜츈 벋 우리가 그걸 할 수 있는 능력이 안됨
+
+(aapl %>% 
+    mutate(diff = c(NA, diff(y))) %>% 
+    ggplot(aes(ds, diff)) +
+    geom_point(color = "steelblue4", alphat = 0.7) +
+    labs(y = "Difference", x = "Date",
+         title = "One Day Returns")
+  ) /
+  (aapl %>% 
+     mutate(diff = c(NA, diff(y))) %>% 
+     ggplot(aes(diff)) +
+     geom_histogram(bins = 50, fill = "steelblue4", color="black")
+   )
+
+#prophet
+m_aapl <- prophet(aapl)
+forecast <- predict(m_aapl, make_future_dataframe(m_aapl, periods = 140))
+plot(m_aapl, forecast)
+prophet_plot_components(m_aapl, forecast
 ## 3. 시계열 데이터 분리
 
 ## 4. 종가를 예측

@@ -32,9 +32,14 @@ end_labels <- (stocks %>%
 # 좀 더 해봐요!
 stocks %>% 
   ggplot(aes(date, open)) +
-  geom_line(aes(color = company))
+  geom_line(aes(color = company)) +
+  scale_y_continuous(sec.axis = sec_axis(~., breaks = end_labels$open,
+                                         labels = end_labels$company)) + #우리가 선택한 6개의 종가를 표시해줘
+  scale_x_date(expand = c(0,0)) +
+  labs(x = "", y = "Open", color = "", title = "주요 회사의 시작가격") +
+  theme(legend.position = "none")
 
-## 3. 시계열 데이터 분히
+## 3. 시계열 데이터 분리
 
 ## 4. 종가를 예측
 
